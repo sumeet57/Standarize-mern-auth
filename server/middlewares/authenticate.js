@@ -10,7 +10,7 @@ export const authenticate = async (req, res, next) => {
     const accessToken = req.cookies.accessToken;
 
     if (!accessToken && !refreshToken) {
-      return res.status(401).json({ error: "Access token missing" });
+      return res.status(400).json({ error: "Access token missing" });
     } else if (!accessToken && refreshToken) {
       const userData = verifyToken(refreshToken);
 

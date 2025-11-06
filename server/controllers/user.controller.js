@@ -4,7 +4,7 @@ import { generateToken, tokenOptions } from "../utils/token.utils.js";
 
 export const registerUser = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { fullName, email, password } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -12,8 +12,9 @@ export const registerUser = async (req, res) => {
     }
 
     const hashedPassword = await hashPassword(password);
+
     const newUser = await User.create({
-      username,
+      fullName,
       email,
       password: hashedPassword,
     });
@@ -28,6 +29,7 @@ export const registerUser = async (req, res) => {
       .cookie("refreshToken", tokens.refreshToken, tokenOptions)
       .json({ message: "User registered successfully" });
   } catch (error) {
+    console.error("Error in registerUser:", error);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
@@ -37,7 +39,7 @@ export const loginUser = async (req, res) => {
     const { email, password } = req.body;
     const user = await User.findOne({ email }).select("+password");
     if (!user) {
-      return res.status(400).json({ error: "Invalid email or password" });
+      return res.status(400).json({ error: "User is not registered" });
     }
     const isPasswordValid = await comparePassword(password, user.password);
 
@@ -66,6 +68,16 @@ export const getUserProfile = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
     return res.status(200).json(user);
+  } catch (error) {
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const logoutUser = async (req, res) => {
+  try {
+    res.clearCookie("accessToken", tokenOptions);
+    res.clearCookie("refreshToken", tokenOptions);
+    return res.status(200).json({ message: "Logout successful" });
   } catch (error) {
     return res.status(500).json({ error: "Internal server error" });
   }
