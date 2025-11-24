@@ -1,6 +1,7 @@
 import { comparePassword, hashPassword } from "../utils/password.utils.js";
 import User from "../models/user.model.js";
 import { generateToken, tokenOptions } from "../utils/token.utils.js";
+import { login, register } from "../services/auth.service.js";
 
 export const registerUser = async (req, res) => {
   try {
@@ -11,18 +12,8 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ error: "User already exists" });
     }
 
-    const hashedPassword = await hashPassword(password);
-
-    const newUser = await User.create({
-      fullName,
-      email,
-      password: hashedPassword,
-    });
-
-    const tokens = generateToken(newUser._id);
-
-    await newUser.save();
-
+    const userId = await register({ fullName, email, password });
+    const tokens = generateToken(userId);
     return res
       .status(201)
       .cookie("accessToken", tokens.accessToken, tokenOptions)
@@ -37,17 +28,10 @@ export const registerUser = async (req, res) => {
 export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email }).select("+password");
-    if (!user) {
-      return res.status(400).json({ error: "User is not registered" });
-    }
-    const isPasswordValid = await comparePassword(password, user.password);
 
-    if (!isPasswordValid) {
-      return res.status(400).json({ error: "Invalid email or password" });
-    }
+    const userId = await login({ email, password });
 
-    const tokens = generateToken(user._id);
+    const tokens = generateToken(userId);
 
     return res
       .status(200)
@@ -55,7 +39,7 @@ export const loginUser = async (req, res) => {
       .cookie("refreshToken", tokens.refreshToken, tokenOptions)
       .json({ message: "Login successful" });
   } catch (error) {
-    return res.status(500).json({ error: "Internal server error" });
+    return res.status(500).json({ error: error.message });
   }
 };
 
