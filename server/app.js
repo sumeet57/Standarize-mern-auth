@@ -17,7 +17,7 @@ app.use(
     origin: process.env.CLIENT_URL,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-session-id"],
   })
 );
 console.log(process.env.CLIENT_URL);

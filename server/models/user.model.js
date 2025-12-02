@@ -26,6 +26,12 @@ const UserSchema = new mongoose.Schema(
       required: true,
       select: false,
     },
+    sessions: [
+      {
+        sessionIdHash: String,
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true }
 );

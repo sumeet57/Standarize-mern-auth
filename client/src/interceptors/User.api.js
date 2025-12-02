@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getFromLocalStorage } from "../utils/storage.utils.js";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL + "/api/user";
 export const userApi = axios.create({
@@ -6,6 +7,7 @@ export const userApi = axios.create({
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
+    "x-session-id": getFromLocalStorage("sessionId") || "",
   },
 });
 
@@ -14,7 +16,9 @@ userApi.interceptors.response.use(
   (error) => {
     if (error.response) {
       if (error.response.status === 401) {
-        window.location.href = "/auth";
+        if (window.location.pathname !== "/auth") {
+          window.location.href = "/auth";
+        }
       } else {
         return Promise.reject(error.response.data.error);
       }

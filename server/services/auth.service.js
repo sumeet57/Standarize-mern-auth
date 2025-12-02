@@ -1,5 +1,26 @@
 import User from "../models/user.model.js";
-import { comparePassword, hashPassword } from "../utils/password.utils.js";
+import { comparePassword, hashPassword } from "../utils/auth/password.utils.js";
+
+import { generateSessionId } from "../utils/auth/session.utils.js";
+
+const MAX_SESSIONS = 5;
+
+export async function createSessionForUser(userId) {
+  const sessionIds = generateSessionId();
+  const hashedId = sessionIds.hashed;
+  const rawId = sessionIds.raw;
+
+  const user = await User.findById(userId);
+
+  user.sessions.push({ sessionIdHash: hashedId });
+  if (user.sessions.length > MAX_SESSIONS) {
+    user.sessions.shift();
+  }
+
+  await user.save();
+
+  return rawId;
+}
 
 export const register = async (data) => {
   try {
