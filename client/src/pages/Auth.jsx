@@ -9,6 +9,7 @@ import {
   FaEye,
   FaEyeSlash,
 } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 const InputField = ({
   icon: Icon,
@@ -34,6 +35,7 @@ const InputField = ({
         type={inputType}
         name={name}
         id={id}
+        required
         placeholder={placeholder}
         onChange={onChange}
         value={value}
@@ -129,6 +131,7 @@ const Auth = () => {
                   type="text"
                   name="fullName"
                   id="firstName"
+                  required
                   placeholder="First Name"
                   onChange={updateValues}
                   value={formData.fullName.firstName}
@@ -139,6 +142,7 @@ const Auth = () => {
                   icon={FaUser}
                   type="text"
                   name="fullName"
+                  required
                   id="lastName"
                   placeholder="Last Name"
                   onChange={updateValues}
@@ -153,6 +157,7 @@ const Auth = () => {
             type="email"
             name="email"
             id="email"
+            required
             placeholder="Email Address"
             onChange={updateValues}
             value={formData.email}

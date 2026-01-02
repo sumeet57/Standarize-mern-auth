@@ -1,5 +1,5 @@
-import React, { useEffect, useState, createContext } from "react";
-import { userApi } from "../interceptors/User.api";
+import React, { useEffect, useState, createContext, useCallback } from "react";
+import { userApi } from "../interceptors/user.api.js";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
@@ -13,84 +13,88 @@ export const UserContextProvider = ({ children }) => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authActionLoading, setAuthActionLoading] = useState(false);
 
-  const getUser = async () => {
+  const getUser = useCallback(async () => {
     try {
-      setLoading(true);
       const response = await userApi.get("/");
-      if (response) {
+      if (response?.data) {
         setUser(response.data);
       }
     } catch (error) {
-      return Promise.reject(error);
+      setUser(null);
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const login = async (userData) => {
+    setAuthActionLoading(true);
+    try {
+      const response = await userApi.post("/login", userData);
+
+      if (response.status === 200) {
+        saveToLocalStorage("sessionId", response.data.sessionId);
+        await getUser();
+        toast.success(response.data.message || "Login Successful");
+        navigate("/");
+      }
+      return response;
+    } catch (error) {
+      toast.error(error);
+      throw error;
+    } finally {
+      setAuthActionLoading(false);
     }
   };
 
   const register = async (userData) => {
+    setAuthActionLoading(true);
     try {
-      setLoading(true);
       const response = await userApi.post("/register", userData);
       if (response.status === 201) {
-        navigate(-1);
-        getUser();
         saveToLocalStorage("sessionId", response.data.sessionId);
-        toast.success(response.data.message);
+        await getUser();
+        toast.success(response.data.message || "Registration Successful");
+        navigate("/");
       }
       return response;
     } catch (error) {
       toast.error(error);
-      return Promise.reject(error);
+      throw error;
     } finally {
-      setLoading(false);
-    }
-  };
-
-  const login = async (userData) => {
-    try {
-      setLoading(true);
-      const response = await userApi.post("/login", userData);
-      if (response.status === 200) {
-        navigate(-1);
-        getUser();
-        saveToLocalStorage("sessionId", response.data.sessionId);
-        toast.success(response.data.message);
-      }
-      return response;
-    } catch (error) {
-      toast.error(error);
-      return Promise.reject(error);
-    } finally {
-      setLoading(false);
+      setAuthActionLoading(false);
     }
   };
 
   const logout = async () => {
     try {
-      setLoading(true);
-      const response = await userApi.post("/logout");
-      if (response.status === 200) {
-        setUser(null);
-        removeFromLocalStorage("sessionId");
-        toast.success(response.data.message);
-      }
-      return response;
+      await userApi.post("/logout");
     } catch (error) {
-      toast.error(error);
-      return Promise.reject(error);
+      console.error("Logout error:", error);
     } finally {
-      setLoading(false);
+      setUser(null);
+      removeFromLocalStorage("sessionId");
+      navigate("/auth");
+      toast.info("Logged out successfully");
     }
   };
 
   useEffect(() => {
     getUser();
-  }, []);
+  }, [getUser]);
 
   return (
     <UserContext.Provider
-      value={{ user, loading, setLoading, register, login, getUser, logout }}
+      value={{
+        user,
+        loading,
+        authActionLoading,
+        register,
+        login,
+        getUser,
+        logout,
+      }}
     >
       {children}
     </UserContext.Provider>

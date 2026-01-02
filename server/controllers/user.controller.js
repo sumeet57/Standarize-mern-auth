@@ -76,9 +76,7 @@ export const logoutUser = async (req, res) => {
     if (!rawSessionId) {
       return res.status(400).json({ error: "Session ID missing" });
     }
-
     const hashed = hashSessionId(rawSessionId);
-
     await User.updateOne(
       { _id: req.userId },
       { $pull: { sessions: { sessionIdHash: hashed } } }

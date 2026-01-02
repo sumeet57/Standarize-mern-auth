@@ -8,8 +8,11 @@ import {
 import {
   authenticate,
   sessionAuthentication,
-} from "../middlewares/authenticate.js";
-import { validateLogin, validateRegister } from "../middlewares/validate.js";
+} from "../middlewares/auth.middleware.js";
+import {
+  validateLogin,
+  validateRegister,
+} from "../middlewares/validate.middleware.js";
 
 const userRouter = express.Router();
 

@@ -51,8 +51,11 @@ export const sessionAuthentication = async (req, res, next) => {
       return res.status(401).json({ error: "Session missing" });
 
     const hashed = hashSessionId(rawSessionId);
-
-    const user = await User.findOne({ "sessions.sessionIdHash": hashed });
+    const user = await User.findOneAndUpdate({
+      sessions: {
+        $elemMatch: { sessionIdHash: hashed },
+      },
+    }).lean();
     if (!user) return res.status(401).json({ error: "Invalid session" });
 
     req.userId = user._id;

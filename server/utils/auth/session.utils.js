@@ -12,10 +12,10 @@ export function generateSessionId() {
   return { raw: id, hashed: hashedId };
 }
 
-// Hash session with secret
 export function hashSessionId(rawSessionId) {
+  const sanitizedId = String(rawSessionId).replace(/['"]+/g, "").trim();
   return crypto
     .createHmac("sha256", SESSION_SECRET)
-    .update(rawSessionId)
+    .update(sanitizedId)
     .digest("hex");
 }
